@@ -15,14 +15,14 @@
 #include <ugpx.h>
 
 
-extern void stars_font;
+
 void game_draw_background(g_t *g) {
     
 
     /* draw game workspace */
 
     /* draw some stars in the background */
-    gputtext(g,&stars_font,"ABCDEFGH",100,100);
+    //gputtext(g,&stars_font,"ABCDEFGH",100,100);
 
 }
 
