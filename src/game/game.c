@@ -16,7 +16,7 @@
 
 static int score, fuel, time, height, hspeed, vspeed;
 
-extern void idp8x16_font;
+extern void led_font;
 char *score_titles[]={
     "REZULTAT", 
     "GORIVO", 
@@ -35,9 +35,10 @@ int *scores[] = {
 void game_draw_score(g_t *g, int x, int y, int ystep, int noff) {
     for(int i=0;i<sizeof(score_titles)/sizeof(char *);i++) {
         /* first print score title */
-        gputtext(g,&idp8x16_font,score_titles[i],x,y);
+        gputtext(g,&led_font,score_titles[i],x,y);
         /* now print score */
-        gputtext(g,&idp8x16_font,"00000",x+noff,y);
+        gputtext(g,&led_font,"00000",x+noff,y);
+        gputtext(g,&led_font,"00000",x+noff+1,y);
         y+=ystep;
     }
 }
@@ -62,7 +63,7 @@ void game_draw_background(g_t *g) {
     game_draw_lem(g, 896, 10);
     
     /* draw scores */
-    game_draw_score(g, 870, 100, 24, 90);
+    game_draw_score(g, 766, 100, 24, 140);
 }
 
 void game_run(g_t *g) {
