@@ -52,18 +52,30 @@ void game_draw_lem(g_t *g, int x, int y) {
     }
 }
 
+extern void terra_draw(g_t *g, void *t);
+extern void * terra_pick(int level);
+extern void draw_lander(g_t *g, uint8_t angle, int x, int y);
 void game_draw_background(g_t *g) {
     
     /* draw game workspace */
+    rect_t r = { 0, 0, 767, 511 };
+    gdrawrect(g,&r);
 
-    /* draw some stars in the background */
-    //gputtext(g,&stars_font,"ABCDEFGH",100,100);
+    /* draw game terrain */
+    terra_draw(g, terra_pick(0));
 
     /* draw lem */
-    game_draw_lem(g, 896, 10);
+    game_draw_lem(g, 10, 10);
     
     /* draw scores */
-    game_draw_score(g, 766, 100, 24, 140);
+    game_draw_score(g, 800, 10, 25, 140);
+
+    /* draw demo */
+    gputtext(g,&led_font,"DEMO                       LUNATIK PRIHAJA!            1.JULIJA 2022",10,480);
+
+    /* finally, put lander 
+    draw_lander(g,0,20,20);
+    */
 }
 
 void game_run(g_t *g) {
