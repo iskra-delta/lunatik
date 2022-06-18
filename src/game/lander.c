@@ -43,13 +43,14 @@ void draw_lander(g_t *g, uint8_t angle, int x, int y) {
         else if (prev==-1) {
             prev=i;
             pidx=2*(line-1);
-            gotoxy(g,x+lander[pidx],y+lander[pidx+1]);
+            gxy(g,x+lander[pidx],y+lander[pidx+1]);
         } else {
             idx=2*(line-1);
             char
                 dx = lander[idx]-lander[pidx],
                 dy = lander[idx+1]-lander[pidx+1];
-            drawdelta(g,dx,dy);
+            gdrawdelta(g,dx,dy);
+            pidx=idx;
         }
         i++;
     }

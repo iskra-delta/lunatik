@@ -29,10 +29,8 @@ int main() {
     g_t* g=ginit(RES_1024x512);
 
     /* show intial page... */
-    while (intro_run(g)) {
+    while (intro_run(g))
         game_run(g);
-        while(kbhit()==0);
-    }
 
     /* clear screen */
     gcls(g);

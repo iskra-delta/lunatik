@@ -37,14 +37,10 @@ void intro_subtitle(g_t *g, coord x, coord y, int vspacing, int moff, int koff) 
     x+=moff;
     gputtext(g, &idp8x16_font, "PRESLEDEK", x, y+vspacing);
     gputtext(g, &idp8x16_font, "PRESLEDEK", x+1, y+vspacing);
-    //gputtext(g, &idp8x16_font, "PRESLEDEK", x, y+vspacing-1);
-    //gputtext(g, &idp8x16_font, "PRESLEDEK", x+1, y+vspacing-1);
     gputtext(g, &idp8x16_font, "za igro.", x+koff, y+vspacing);
-
-    gputtext(g, &idp8x16_font, "TIPKA 'K'", x, y+2*vspacing);
-    gputtext(g, &idp8x16_font, "TIPKA 'K'", x+1, y+2*vspacing);
-    //gputtext(g, &idp8x16_font, "TIPKA 'Q'", x, y+2*vspacing-1);
-    //gputtext(g, &idp8x16_font, "TIPKA 'Q'", x+1, y+2*vspacing-1);
+    
+    gputtext(g, &idp8x16_font, "CTRL + C", x, y+2*vspacing);
+    gputtext(g, &idp8x16_font, "CTRL + C", x+1, y+2*vspacing);
     gputtext(g, &idp8x16_font, "za konec.", x+koff, y+2*vspacing);
 }
 
@@ -144,7 +140,7 @@ bool intro_run(g_t *g) {
     /* main loop */
     while (true) {
         char ch=kbhit();
-        if (ch=='K' || ch=='k')
+        if (ch==3)
             return false;
         else if (ch==' ')
             return true;
