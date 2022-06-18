@@ -71,7 +71,9 @@ extern void terra_draw(g_t *g, void *t);
 extern void * terra_pick(int level);
 extern void draw_lander(g_t *g, uint8_t angle, int x, int y);
 void game_draw_background(g_t *g) {
-    
+
+    /* set write page to 1 */    
+
     /* draw game workspace */
     rect_t r = { 0, 0, 767, 511 };
     gdrawrect(g,&r);
@@ -92,6 +94,12 @@ void game_draw_background(g_t *g) {
 
 void game_run(g_t *g) {
 
+    /* clear screen */
+    gcls(g);
+
+    /* set page */
+    gsetpage(g,PG_WRITE,1);
+
     /* game parameters! */
     landery=LANDER_MIN_Y;
     landerx=LANDER_MIN_X;
@@ -100,11 +108,10 @@ void game_run(g_t *g) {
     cycle_x=cycle_y=0;
     cycle_g=0;
 
-    /* clear screen */
-    gcls(g);
-
     /* draw background */
     game_draw_background(g);
+
+    gsetpage(g,PG_DISPLAY,1);
 
     bool clear=false;
     bool exit=false;
@@ -236,4 +243,7 @@ void game_run(g_t *g) {
             }
         }
     }
+
+    gcls(g);
+    gsetpage(g,PG_DISPLAY|PG_WRITE,0);
 }
