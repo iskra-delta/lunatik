@@ -9,43 +9,37 @@
  * 20.02.2022   tstih
  *
  */
-#include <stdbool.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <ugpx.h>
+#include <game/intro.h>
 
-extern void title_L, title_U, title_N,
-    title_A, title_T, title_I, title_K;
-void *letters[]={&title_L,&title_U, &title_N,
-    &title_A, &title_T, &title_I, &title_K};
-void intro_title(g_t *g, coord x, coord y, uint8_t spacing) {
+
+static void *letters[]={&title_L,&title_U, &title_N, &title_A, &title_T, &title_I, &title_K};
+void intro_title(coord x, coord y, uint8_t spacing) {
     int n=sizeof (letters)/sizeof(void *);
     uint8_t width, height;
     for (int i=0;i<n;i++) {
-        gputglyph(g,letters[i],x,y);
+        gputglyph(letters[i],x,y);
         gmeasureglyph(letters[i],&width,&height);
         if (i==3) width-=32; /* hardcoded kerning */
         x=x+width+spacing;
     }
 }
 
-extern void idp8x16_font;
-void intro_subtitle(g_t *g, coord x, coord y, int vspacing, int moff, int koff) {
+
+void intro_subtitle(coord x, coord y, int vspacing, int moff, int koff) {
     /* subtitle */
-    gputtext(g, &idp8x16_font, "Kapitan LUNATIK, potrebujemo vas!", x, y);
+    gputtext(&idp8x16_font, "Kapitan LUNATIK, potrebujemo vas!", x, y);
     /* meni */
     x+=moff;
-    gputtext(g, &idp8x16_font, "PRESLEDEK", x, y+vspacing);
-    gputtext(g, &idp8x16_font, "PRESLEDEK", x+1, y+vspacing);
-    gputtext(g, &idp8x16_font, "za igro.", x+koff, y+vspacing);
+    gputtext(&idp8x16_font, "PRESLEDEK", x, y+vspacing);
+    gputtext(&idp8x16_font, "PRESLEDEK", x+1, y+vspacing);
+    gputtext(&idp8x16_font, "za igro.", x+koff, y+vspacing);
     
-    gputtext(g, &idp8x16_font, "CTRL + C", x, y+2*vspacing);
-    gputtext(g, &idp8x16_font, "CTRL + C", x+1, y+2*vspacing);
-    gputtext(g, &idp8x16_font, "za konec.", x+koff, y+2*vspacing);
+    gputtext(&idp8x16_font, "CTRL + C", x, y+2*vspacing);
+    gputtext(&idp8x16_font, "CTRL + C", x+1, y+2*vspacing);
+    gputtext(&idp8x16_font, "za konec.", x+koff, y+2*vspacing);
 }
 
-#define NO_STARS        5
-#define NO_LAYERS       3
+
 static int sx[NO_LAYERS][NO_STARS];
 static int prevsx[NO_LAYERS][NO_STARS];
 static int sy[NO_LAYERS][NO_STARS];
@@ -86,27 +80,28 @@ void intro_init_starfield() {
     }
 }
 
-extern void drawstar(g_t *g, coord x, coord y, int layer);
-void intro_draw_star(g_t *g, int x[NO_LAYERS][NO_STARS], int i, int j, bool remove) {
+
+void intro_draw_star(int x[NO_LAYERS][NO_STARS], int i, int j, bool remove) {
     if (remove)
-        gsetcolor(g,CO_BACK);
+        gsetcolor(CO_BACK);
     else
-        gsetcolor(g,CO_FORE);
-    drawstar(g,x[j][i],sy[j][i],j);
+        gsetcolor(CO_FORE);
+    intro_drawstar(x[j][i],sy[j][i],j);
 }
 
-void intro_draw_starfield(g_t *g) {
+
+void intro_draw_starfield(bool cls) {
+    if (cls) gcls();
     for(int i=0;i<NO_STARS;i++) 
         for(int j=0;j<NO_LAYERS;j++) {
-            intro_draw_star(g,prevsx,i,j,true);
-            intro_draw_star(g,sx,i,j,false);
+            intro_draw_star(prevsx,i,j,true);
+            intro_draw_star(sx,i,j,false);
         }
 }
 
-#define STAR_STEP 2
-extern void clk_tick();
-void intro_move_stars(g_t *g) {
-    intro_draw_starfield(g);
+
+void intro_move_stars() {
+    intro_draw_starfield(false);
     for(int i=0;i<NO_STARS;i++) 
         for(int j=0;j<NO_LAYERS;j++) {
             /* increase star clock */
@@ -123,19 +118,18 @@ void intro_move_stars(g_t *g) {
         }
 }
 
-bool intro_run(g_t *g) {
+
+bool intro_run() {
 
     /* intialize stars! */
     intro_init_starfield();
 
-    /* clear screen */
-    gcls(g);
-    
-    /* show stars and titles */
-    intro_draw_starfield(g); 
+    /* show stars */
+    intro_draw_starfield(true); 
 
-    intro_title(g, 140, 180, 8);
-    intro_subtitle(g, 380, 300, 25, 40, 80);
+    /* show title and subtitle */
+    intro_title(140, 180, 8);
+    intro_subtitle(380, 300, 25, 40, 80);
 
     /* main loop */
     while (true) {
@@ -144,6 +138,6 @@ bool intro_run(g_t *g) {
             return false;
         else if (ch==' ')
             return true;
-        intro_move_stars(g);
+        intro_move_stars();
     }
 }

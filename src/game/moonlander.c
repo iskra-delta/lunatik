@@ -14,29 +14,27 @@
 #include <stdio.h>
 #include <ugpx.h>
 
+
 /* ----- definitions ------------------------------------------------------- */
 extern void clk_init();
-extern bool intro_run(g_t *g);
-extern void game_run(g_t *g);
+extern bool intro_run();
+extern void game_run();
 
 /* ----- main loop --------------------------------------------------------- */
 int main() {
 
-    /* initialize game clock */
-    clk_init();
-
     /* enter graphics mode */
-    g_t* g=ginit(RES_1024x512);
+    ginit(RES_1024x512);
 
     /* show intial page... */
-    while (intro_run(g))
-        game_run(g);
+    while (intro_run())
+        game_run();
 
     /* clear screen */
-    gcls(g);
+    gcls();
 
     /* exit graphics mode */
-    gexit(g);
+    gexit();
 
     /* all well.. */
     return 0;

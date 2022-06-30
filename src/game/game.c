@@ -47,58 +47,58 @@ int *scores[] = {
     &hspeed, 
     &vspeed
 };
-void game_draw_score(g_t *g, int x, int y, int ystep, int noff) {
+void game_draw_score(int x, int y, int ystep, int noff) {
     for(int i=0;i<sizeof(score_titles)/sizeof(char *);i++) {
         /* first print score title */
-        gputtext(g,&led_font,score_titles[i],x,y);
+        gputtext(&led_font,score_titles[i],x,y);
         /* now print score */
-        gputtext(g,&led_font,"00000",x+noff,y);
-        gputtext(g,&led_font,"00000",x+noff+1,y);
+        gputtext(&led_font,"00000",x+noff,y);
+        gputtext(&led_font,"00000",x+noff+1,y);
         y+=ystep;
     }
 }
 
 extern void lem_font;
 char *lem[]={"ABCDE","FGHIJ","KLMNO","PQRST","UVWXY"};
-void game_draw_lem(g_t *g, int x, int y) {
+void game_draw_lem(int x, int y) {
     for(int i=0;i<sizeof(lem)/sizeof(char *);i++) {
-        gputtext(g,&lem_font,lem[i],x,y);
+        gputtext(&lem_font,lem[i],x,y);
         y+=14;
     }
 }
 
-extern void terra_draw(g_t *g, void *t);
+extern void terra_draw(void *t);
 extern void * terra_pick(int level);
-extern void draw_lander(g_t *g, uint8_t angle, int x, int y);
-void game_draw_background(g_t *g) {
+extern void lander_draw(uint8_t angle, int x, int y);
+void game_draw_background() {
 
     /* set write page to 1 */    
 
     /* draw game workspace */
     rect_t r = { 0, 0, 767, 511 };
-    gdrawrect(g,&r);
+    gdrawrect(&r);
 
     /* draw game terrain */
-    terra_draw(g, terra_pick(0));
+    terra_draw(terra_pick(0));
 
     /* draw lem */
-    game_draw_lem(g, 800, 10);
+    game_draw_lem(800, 10);
     
     /* draw scores */
-    game_draw_score(g, 800, 100, 25, 140);
+    game_draw_score(800, 100, 25, 140);
 
     /* draw demo */
-    gputtext(g,&led_font,"DEMO                       LUNATIK PRIHAJA!            1.JULIJA 2022",10,480);
+    gputtext(&led_font,"DEMO                       LUNATIK PRIHAJA!            1.JULIJA 2022",10,480);
 }
 
 
-void game_run(g_t *g) {
+void game_run() {
 
     /* clear screen */
-    gcls(g);
+    gcls();
 
     /* set page */
-    gsetpage(g,PG_WRITE,1);
+    gsetpage(PG_WRITE,1);
 
     /* game parameters! */
     landery=LANDER_MIN_Y;
@@ -109,26 +109,26 @@ void game_run(g_t *g) {
     cycle_g=0;
 
     /* draw background */
-    game_draw_background(g);
+    game_draw_background();
 
-    gsetpage(g,PG_DISPLAY,1);
+    gsetpage(PG_DISPLAY,1);
 
     bool clear=false;
     bool exit=false;
     while(!exit) {
 
         if (clear) {
-            gsetcolor(g,CO_BACK);
-            draw_lander(g,
+            gsetcolor(CO_BACK);
+            lander_draw(
                 landerca, 
                 landercx, 
                 landercy);
-            gsetcolor(g,CO_FORE);
+            gsetcolor(CO_FORE);
             clear=false;
         }
 
         /* draw lander */
-        draw_lander(g,
+        lander_draw(
             landera, 
             landerx, 
             landery);
@@ -244,6 +244,6 @@ void game_run(g_t *g) {
         }
     }
 
-    gcls(g);
-    gsetpage(g,PG_DISPLAY|PG_WRITE,0);
+    gcls();
+    gsetpage(PG_DISPLAY|PG_WRITE,0);
 }

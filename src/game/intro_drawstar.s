@@ -1,22 +1,23 @@
-		;; drawstar.s
+		;; intro_drawstar.s
         ;; 
-        ;; draw single star
+        ;; optimized code to draw a single star
+        ;; used by the intro screen
 		;;
         ;; MIT License (see: LICENSE)
         ;; copyright (c) 2022 tomaz stih
         ;;
 		;; 14.06.2022    tstih
-		.module drawstar
+		.module intro_drawstar
 
-        .globl  _drawstar
+        .globl  _intro_drawstar
 
         .area	_CODE
-        ;; --------------------------------------------------
-		;; void drawstar(g_t *g, coord x, coord y, int layer)
-        ;; --------------------------------------------------
+        ;; ------------------------------------------
+		;; void drawstar(coord x, coord y, int layer)
+        ;; ------------------------------------------
         ;; places star at x,y
-_drawstar:
-        ld      iy,#4
+_intro_drawstar:
+        ld      iy,#2
         add     iy,sp
         ld      l,(iy)
         ld      h,1(iy)
