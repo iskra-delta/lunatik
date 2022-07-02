@@ -26,6 +26,8 @@ int main() {
     /* enter graphics mode */
     ginit(RES_1024x512);
 
+    gcls();
+
     /* show intial page... */
     while (intro_run())
         game_run();

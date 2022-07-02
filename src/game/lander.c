@@ -24,11 +24,11 @@ static void *landers[]={
 /* draw the rotated lander */
 void lander_draw(uint8_t angle, int x, int y) {
     /* select the lander image */
-    char *lander=(char *)landers[angle];
-    char *lines=(char *)&shiplines;
-    char i=0, len;
+    signed char *lander=(signed char *)landers[angle];
+    signed char *lines=(signed char *)&shiplines;
+    signed char i=0, len;
     len=*lines++; /* get ship lines */
-    int prev=-1, idx=0, pidx=0;  
+    signed char prev=-1, idx=0, pidx=0;  
     while (i<len) {
         int line=lines[i];
         if (line==0) prev=-1;
@@ -38,7 +38,7 @@ void lander_draw(uint8_t angle, int x, int y) {
             gxy(x+lander[pidx],y+lander[pidx+1]);
         } else {
             idx=2*(line-1);
-            char
+            signed char
                 dx = lander[idx]-lander[pidx],
                 dy = lander[idx+1]-lander[pidx+1];
             gdrawdelta(dx,dy);
