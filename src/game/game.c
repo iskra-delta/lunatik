@@ -12,238 +12,145 @@
 #include <stdbool.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
+
 #include <ugpx.h>
 
-static int score, fuel, time, height, hspeed, vspeed;
+#include <game/game.h>
+#include <game/kbd.h>
+#include <game/events.h>
 
-#define LANDER_MIN_X 4
-#define LANDER_MAX_X (768-24-4)
-#define LANDER_MIN_Y 16
-#define LANDER_MAX_Y 460
-static int landerx, landery;
-static int landercx, landercy;
-static char landera, landerca;
-
-#define GRAVITY_CYCLE 70
-static int cycle_x, cycle_y, cycle_g;
-static int vx, vy;
-
-#define THRUST_DURATION 30
-static char thrust;
-
-extern void led_font;
-char *score_titles[]={
-    "REZULTAT", 
-    "GORIVO", 
-    "PREOST.CAS", 
-    "VISINA",
-    "HOR.HITROST", 
-    "VER.HITROST"};
-int *scores[] = {
-    &score,
-    &fuel,
-    &time,
-    &height,
-    &hspeed, 
-    &vspeed
-};
-void game_draw_score(int x, int y, int ystep, int noff) {
-    for(int i=0;i<sizeof(score_titles)/sizeof(char *);i++) {
-        /* first print score title */
-        gputtext(&led_font,score_titles[i],x,y);
-        /* now print score */
-        gputtext(&led_font,"00000",x+noff,y);
-        gputtext(&led_font,"00000",x+noff+1,y);
-        y+=ystep;
-    }
+static game_t _game;
+game_t *game_init() {
+    /* start the game at level 1 */
+    _game.level=1;
+    /* calcuate remaining fuel based on level and
+       set initial score to 0 */
+    _game.fuel= (GAME_LEVELS - _game.level + 1) * FUEL_UNIT;
+    _game.score=0;
+    /* set initial velocity and thrust */
+    _game.vx = LANDER_INIT_VX;
+    _game.vy = LANDER_INIT_VY;
+    _game.thrust = THRUST_NONE;
+    /* create game clocks */
+    clk_clr();
+    _game.vxclk=clk_attach( LANDER_MAX_VEL-_game.vx, (clk_handler_t)ev_clk_hmove);
+    _game.vyclk=clk_attach( LANDER_MAX_VEL-_game.vy, (clk_handler_t)ev_clk_vmove);
+    _game.gravityclk=clk_attach( CLK_GRAVITY, (clk_handler_t)ev_clk_gravity);
+    _game.thrustclk=clk_attach( CLK_THRUST, (clk_handler_t)ev_clk_thrust);
+    /* set pages */
+    _game.page = INVALID_PAGE;
+    /* initial lander position */
+    _game.lpos.angle=LANDER_INIT_A;
+    _game.lpos.x=LANDER_MIN_X + LANDER_INIT_X;  
+    _game.lpos.y=LANDER_MIN_Y + LANDER_INIT_Y;
+    /* same for prev position */
+    memcpy(&(_game.lprevpos), &(_game.lpos), sizeof(lpos_t));
+    /* initial repaint */
+    _game.update_lander=true;
+    /* return pointer to initialized game! */
+    return &_game;
 }
 
-extern void lem_font;
-char *lem[]={"ABCDE","FGHIJ","KLMNO","PQRST","UVWXY"};
-void game_draw_lem(int x, int y) {
-    for(int i=0;i<sizeof(lem)/sizeof(char *);i++) {
-        gputtext(&lem_font,lem[i],x,y);
-        y+=14;
-    }
+uint8_t game_draw_background(game_t *g) {
+    g;
+    /* screen rectangle! */
+    rect_t screen={0,0,1023,511};
+    /* set write page to 1
+       assumption: current page is 0 */
+    gsetpage(PG_WRITE,1);
+    /* draw rect around screen... */
+    gdrawrect(&screen);
+    /* now clear screen 0 and switch display to page 1 */
+    gcls();
+    gsetpage(PG_DISPLAY,1);
+    /* finally, draw background for screen 0 */
+    gsetpage(PG_WRITE,0);
+    gdrawrect(&screen);
+    /* and return current page! */
+    return 0;
 }
 
-extern void terra_draw(void *t);
-extern void * terra_pick(int level);
-extern void lander_draw(uint8_t angle, int x, int y);
-void game_draw_background() {
-
-    /* set write page to 1 */    
-
-    /* draw game workspace */
-    rect_t r = { 0, 0, 767, 511 };
-    gdrawrect(&r);
-
-    /* draw game terrain */
-    terra_draw(terra_pick(0));
-
-    /* draw lem */
-    game_draw_lem(800, 10);
-    
-    /* draw scores */
-    game_draw_score(800, 100, 25, 140);
-
-    /* draw demo */
-    gputtext(&led_font,"DEMO                       LUNATIK PRIHAJA!            1.JULIJA 2022",10,480);
+void game_erase_ship(game_t *g) {
+    /* no previous page or no need to update? */
+    if (g->page==INVALID_PAGE
+        || !g->update_lander) return;
+    /* clear area! */
+    rect_t sr={
+        g->lprevpos.x,
+        g->lprevpos.y,
+        g->lprevpos.x+32,
+        g->lprevpos.y+32 };
+    gsetcolor(CO_BACK); gfillrect(&sr);
 }
 
+void game_draw_ship(game_t *g) {
+    /* no page or no need to update? */
+    if (g->page==INVALID_PAGE
+        || !g->update_lander) return;
+    /* get the right lander based on thrust */
+    uint8_t offset=g->thrust * 24;
+    /* create ship string */
+    char shipstr[2] = { offset + 32 + g->lpos.angle, 0 };
+    /* draw ship! */
+    gsetcolor(CO_FORE);
+    gputtext(
+        &ship_font,
+        shipstr,
+        g->lpos.x,
+        g->lpos.y);
+}
+
+uint8_t game_next_page(uint8_t page) {
+    if (page) return 0; else return 1;
+}
 
 void game_run() {
 
-    /* clear screen */
-    gcls();
+    /* initialize game! */
+    game_t *g=game_init();
+    
+    /* draw background, it returns current
+       display page and we want to start on next page... */
+    g->page = game_next_page(game_draw_background(g));
+    gsetpage(PG_WRITE, g->page);
 
-    /* set page */
-    gsetpage(PG_WRITE,1);
-
-    /* game parameters! */
-    landery=LANDER_MIN_Y;
-    landerx=LANDER_MIN_X;
-    landera=0;
-    vx=6; vy=0;
-    cycle_x=cycle_y=0;
-    cycle_g=0;
-
-    /* draw background */
-    game_draw_background();
-
-    gsetpage(PG_DISPLAY,1);
-
-    bool clear=false;
+    /* main game loop! */
     bool exit=false;
     while(!exit) {
 
-        if (clear) {
-            gsetcolor(CO_BACK);
-            lander_draw(
-                landerca, 
-                landercx, 
-                landercy);
-            gsetcolor(CO_FORE);
-            clear=false;
-        }
+        /* handle drawing to display page */
+        game_erase_ship(g);
+        game_draw_ship(g);
+        g->update_lander=false;
 
-        /* draw lander */
-        lander_draw(
-            landera, 
-            landerx, 
-            landery);
+        /* remember last current position */
+        memcpy(&(g->lprevpos), &(g->lpos), sizeof(lpos_t));
 
-        /* remember previous position */
-        landerca=landera;
-        landercx=landerx;
-        landercy=landery;
+        /* process keyboard events */
+        exit=!kbd_scan(
+            g,
+            (kbd_handler_t)ev_kbd_left,
+            (kbd_handler_t)ev_kbd_right,
+            NULL,
+            NULL,
+            (kbd_handler_t)ev_kbd_space,
+            NULL,
+            NULL
+        );
+        /* process timed events */
+        clk_tick(g);
 
-        /* increase game cycles */
-        cycle_x++;
-        cycle_y++;
-
-        /* main game loop */
-        char c=kbhit();
-        switch(c) {
-            case 'p':
-            case 'P':
-                break;
-            case 'o':
-            case 'O':
-                break;
-            case 27:
-                if (!kbhit()) /* escape? */
-                    exit=true;
-                else {
-                    c=kbhit();
-                    if (c=='A' || c=='B') { /*up*/
-                        clear=true;
-                        if (!thrust) thrust=1;
-                    } else if (c=='C') { /* right */
-                        clear=true;
-                        if (landera==23)
-                            landera=0;
-                        else
-                            landera++;
-                    } else if (c=='D') { /* left */
-                        clear=true;
-                        if (landera==0)
-                            landera=23;
-                        else
-                            landera--;
-                    }
-                }
-                break;
-            case 3: /* CTRL+C */
-                exit=true;
-            case ' ':
-                clear=true;
-                if (!thrust) thrust=1;
-                break;
-        }
-
-        /* cycle logic */
-        if (!exit) {
-            /* test for x cycle */
-            if (10 - abs(vx) <= cycle_x)
-            {
-                if (vx >= 0)
-                    landerx++;
-                else
-                    landerx--;
-
-                if (landerx == LANDER_MAX_X) 
-                    landerx=LANDER_MIN_X + 1;
-                else if (landerx < LANDER_MIN_X)
-                    landerx=LANDER_MAX_X - 1;
-                cycle_x=0;
-                clear=true;
-            }
-
-            /* test for y cycle */
-            if (10 - abs(vy) <= cycle_y)
-            {
-                if (vy >= 0)
-                    landery++;
-                else
-                    landery--;
-                if (landery>LANDER_MAX_Y)
-                    landery=LANDER_MAX_Y;
-                if (landery<LANDER_MIN_Y)
-                    landery=LANDER_MIN_Y;
-                cycle_y = 0;
-                clear=true;
-            }
-
-            /* thrust cycle */
-            if (thrust > 0  && thrust < THRUST_DURATION) 
-                thrust = thrust + 1;
-            if (thrust >= THRUST_DURATION)
-            {
-                thrust = 0;
-
-                /* calculate thrust */
-                int thrustx=0;
-                int thrusty=3;
-                
-                vy = vy - thrusty;
-                if (vy < -10) vy = -10;
-                if (vy > 10) vy = 10;
-                vx = vx - thrustx;
-                if (vx < -10)vx = -10;
-                if (vx > 10) vx = 10;
-            }
-
-            /* gravity cycle */
-            cycle_g++;
-            if (cycle_g>= GRAVITY_CYCLE)
-            {
-                cycle_g = 0;
-                if (vy<10) vy++;
-            }
+        /* switch pages? */
+        if (g->update_lander) {
+            gsetpage(PG_DISPLAY, g->page);
+            g->page=game_next_page(g->page);
+            gsetpage(PG_WRITE, g->page);
         }
     }
-
+    /* clear page 1 before leaving */
+    gsetpage(PG_DISPLAY|PG_WRITE,1);
     gcls();
+    /* leave the game! prepare for intro page... */
     gsetpage(PG_DISPLAY|PG_WRITE,0);
 }

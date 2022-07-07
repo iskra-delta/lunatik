@@ -12,13 +12,11 @@
 #include <stdbool.h>
 #include <stdlib.h>
 #include <stdio.h>
+
 #include <ugpx.h>
 
 
-/* ----- definitions ------------------------------------------------------- */
-extern void clk_init();
-extern bool intro_run();
-extern void game_run();
+
 
 /* ----- main loop --------------------------------------------------------- */
 int main() {
@@ -26,6 +24,7 @@ int main() {
     /* enter graphics mode */
     ginit(RES_1024x512);
 
+    /* clear screen */
     gcls();
 
     /* show intial page... */
@@ -41,3 +40,6 @@ int main() {
     /* all well.. */
     return 0;
 }
+
+
+
