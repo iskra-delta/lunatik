@@ -42,7 +42,7 @@ clk_t* clk_attach(uint8_t ticks, clk_handler_t handler) {
 void clk_tick(void *clkhpar) {
     /* for each registered handler */
     for (uint8_t i=0; i<_clkhlen; i++) {
-        if (_clkh[i].counter==_clkh[i].ticks) {
+        if (_clkh[i].counter>=_clkh[i].ticks) {
             _clkh[i].counter=0;
             _clkh[i].handler(clkhpar);
         }
@@ -51,7 +51,6 @@ void clk_tick(void *clkhpar) {
 }
 
 void clk_setticks(clk_t *clkh, uint8_t ticks) {
-    clkh->counter=0;
     clkh->ticks=ticks;
 }
 

@@ -19,6 +19,7 @@
 #include <game/game.h>
 #include <game/kbd.h>
 #include <game/events.h>
+#include <game/lander.h>
 
 static game_t _game;
 game_t *game_init() {
@@ -71,45 +72,17 @@ uint8_t game_draw_background(game_t *g) {
     return 0;
 }
 
-void game_erase_ship(game_t *g) {
-    /* no previous page or no need to update? */
-    if (g->page==INVALID_PAGE
-        || !g->update_lander) return;
-    /* clear area! */
-    rect_t sr={
-        g->lprevpos.x,
-        g->lprevpos.y,
-        g->lprevpos.x+32,
-        g->lprevpos.y+32 };
-    gsetcolor(CO_BACK); gfillrect(&sr);
-}
-
-void game_draw_ship(game_t *g) {
-    /* no page or no need to update? */
-    if (g->page==INVALID_PAGE
-        || !g->update_lander) return;
-    /* get the right lander based on thrust */
-    uint8_t offset=g->thrust * 24;
-    /* create ship string */
-    char shipstr[2] = { offset + 32 + g->lpos.angle, 0 };
-    /* draw ship! */
-    gsetcolor(CO_FORE);
-    gputtext(
-        &ship_font,
-        shipstr,
-        g->lpos.x,
-        g->lpos.y);
-}
-
 uint8_t game_next_page(uint8_t page) {
     if (page) return 0; else return 1;
 }
 
+
+extern char *scorez(int i, char *a);
 void game_run() {
 
     /* initialize game! */
     game_t *g=game_init();
-    
+
     /* draw background, it returns current
        display page and we want to start on next page... */
     g->page = game_next_page(game_draw_background(g));
@@ -120,12 +93,19 @@ void game_run() {
     while(!exit) {
 
         /* handle drawing to display page */
-        game_erase_ship(g);
-        game_draw_ship(g);
-        g->update_lander=false;
+        if (g->page!=INVALID_PAGE
+            || g->update_lander) {
+                
+                /* erase on previous and draw on current position! */
+                lander_erase(g->lprevpos.x, g->lprevpos.y);
+                lander_draw(g->lpos.x, g->lpos.y, g->lpos.angle,g->thrust);
 
-        /* remember last current position */
-        memcpy(&(g->lprevpos), &(g->lpos), sizeof(lpos_t));
+                /* remember current position as prev. position*/
+                memcpy(&(g->lprevpos), &(g->lpos), sizeof(lpos_t));
+
+                /* signal end of paing cycle */
+                g->update_lander=false;
+            }
 
         /* process keyboard events */
         exit=!kbd_scan(

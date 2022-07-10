@@ -1,7 +1,7 @@
 /*
- * moonlander.c
+ * main.c
  *
- * the moon lander!
+ * the moon lander main()!
  *
  * MIT License (see: LICENSE)
  * Copyright (c) 2022 Tomaz Stih

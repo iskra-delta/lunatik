@@ -36,12 +36,9 @@
 
 /* game velocity */
 #define LANDER_MAX_VEL  10
-#define LANDER_INIT_VX  6
+#define LANDER_INIT_VX  10
 #define LANDER_INIT_VY  0
-
-/* lander size */
-#define LANDER_W        32
-#define LANDER_H        32
+#define LANDER_MOVE_LEN 1
 
 /* thrust stages */
 #define THRUST_NONE     0
@@ -96,8 +93,6 @@ typedef struct game_s {
     uint8_t page;
 } game_t;
 
-/* ship font! */
-extern void ship_font;
 
 /* run game! */
 extern void game_run();
