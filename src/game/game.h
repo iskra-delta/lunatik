@@ -36,7 +36,7 @@
 
 /* game velocity */
 #define LANDER_MAX_VEL  10
-#define LANDER_INIT_VX  10
+#define LANDER_INIT_VX  4
 #define LANDER_INIT_VY  0
 #define LANDER_MOVE_LEN 1
 
@@ -71,9 +71,8 @@ typedef struct lpos_s {
 typedef struct game_s {
     /* level 1-10 */
     uint8_t level;                      /* game level! */
-    /* score fields */
-    uint16_t score;                     /* game score! */
-    uint16_t fuel;                      /* rem. fuel */
+    /* lives...*/
+    uint8_t lives;
     /* speed / velocity */
     int vx;                             /* horz. speed */
     int vy;                             /* vert. speed */

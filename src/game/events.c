@@ -28,6 +28,7 @@ void ev_clk_hmove(game_t *g)  {
     g->update_lander=true;
 }
 
+/* vertical move cycle: move the lander */
 void ev_clk_vmove(game_t *g) {
     /* change lander position */
     if (g->vy > 0) g->lpos.y+=LANDER_MOVE_LEN; 
@@ -79,6 +80,7 @@ void ev_kbd_right(game_t *g) {
     g->update_lander=true;
 }  
 
+/* space, up or down: thrust! */
 void ev_kbd_space(game_t *g) {
 
     /* calulate delta velocity */

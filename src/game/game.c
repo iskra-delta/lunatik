@@ -20,6 +20,8 @@
 #include <game/kbd.h>
 #include <game/events.h>
 #include <game/lander.h>
+#include <game/score.h>
+#include <game/intro.h>
 
 static game_t _game;
 game_t *game_init() {
@@ -27,12 +29,18 @@ game_t *game_init() {
     _game.level=1;
     /* calcuate remaining fuel based on level and
        set initial score to 0 */
-    _game.fuel= (GAME_LEVELS - _game.level + 1) * FUEL_UNIT;
-    _game.score=0;
+    score_set(SCORE_FUEL,(GAME_LEVELS - _game.level + 1) * FUEL_UNIT);
+    score_set(SCORE_RESULT,0);
     /* set initial velocity and thrust */
     _game.vx = LANDER_INIT_VX;
     _game.vy = LANDER_INIT_VY;
     _game.thrust = THRUST_NONE;
+    /* update score board */
+    score_set(SCORE_HSPEED,10 * _game.vx);
+    score_set(SCORE_VSPEED,10 * _game.vy);
+    /* lives */
+    _game.lives=3;
+    score_set(SCORE_LIVES,_game.lives);
     /* create game clocks */
     clk_clr();
     _game.vxclk=clk_attach( LANDER_MAX_VEL-_game.vx, (clk_handler_t)ev_clk_hmove);
@@ -47,27 +55,33 @@ game_t *game_init() {
     _game.lpos.y=LANDER_MIN_Y + LANDER_INIT_Y;
     /* same for prev position */
     memcpy(&(_game.lprevpos), &(_game.lpos), sizeof(lpos_t));
-    /* initial repaint */
+    /* initial repaint of game elemets*/
     _game.update_lander=true;
     /* return pointer to initialized game! */
     return &_game;
 }
 
+
+
 uint8_t game_draw_background(game_t *g) {
     g;
-    /* screen rectangle! */
-    rect_t screen={0,0,1023,511};
     /* set write page to 1
        assumption: current page is 0 */
     gsetpage(PG_WRITE,1);
-    /* draw rect around screen... */
-    gdrawrect(&screen);
+    /* draw scoreboard... */
+    score_draw_board();
+    for (int id=SCORE_FUEL; id<=SCORE_RESULT; id++)
+        score_draw_label(id);
     /* now clear screen 0 and switch display to page 1 */
     gcls();
     gsetpage(PG_DISPLAY,1);
     /* finally, draw background for screen 0 */
     gsetpage(PG_WRITE,0);
-    gdrawrect(&screen);
+    /* draw scoreboard (on both pages)... */
+    score_invalidate_board();
+    score_draw_board();
+    for (int id=SCORE_FUEL; id<=SCORE_RESULT; id++)
+        score_draw_label(id);
     /* and return current page! */
     return 0;
 }
@@ -76,8 +90,6 @@ uint8_t game_next_page(uint8_t page) {
     if (page) return 0; else return 1;
 }
 
-
-extern char *scorez(int i, char *a);
 void game_run() {
 
     /* initialize game! */
@@ -112,8 +124,8 @@ void game_run() {
             g,
             (kbd_handler_t)ev_kbd_left,
             (kbd_handler_t)ev_kbd_right,
-            NULL,
-            NULL,
+            (kbd_handler_t)ev_kbd_space,
+            (kbd_handler_t)ev_kbd_space,
             (kbd_handler_t)ev_kbd_space,
             NULL,
             NULL

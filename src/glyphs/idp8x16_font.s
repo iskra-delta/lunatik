@@ -1,4 +1,4 @@
-        ;;  idp8x16.s
+        ;;  idp8x16_font.s
         ;;  
         ;;  idp8x16_font
         ;; 

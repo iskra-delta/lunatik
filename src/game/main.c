@@ -15,7 +15,8 @@
 
 #include <ugpx.h>
 
-
+#include <game/intro.h>
+#include <game/game.h>
 
 
 /* ----- main loop --------------------------------------------------------- */

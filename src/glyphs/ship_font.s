@@ -1,4 +1,4 @@
-        ;;  ship.s
+        ;;  ship_font.s
         ;;  
         ;;  ship_font
         ;; 

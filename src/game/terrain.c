@@ -14,25 +14,33 @@
 #include <stdio.h>
 #include <ugpx.h>
 
-void terra_draw(void *t) {
-    int *ptr=(int *)t;
+#include <game/terrain.h>
+
+static int eps[TERRAIN_EL_POINTS];
+static void terrain_fill_gap(uint8_t start, uint8_t end, int *terrain) {
+    uint8_t mid = start + (end-start) / 2;
+    /* generate mid point elevation... */
+    /* ...and recurse */
+    if (mid>start) terrain_fill_gap(start,mid,terrain);
+    if (mid<end) terrain_fill_gap(mid,end,terrain);
+
+}
+int * terrain_generate(uint8_t level) {
+    level;
+    return eps;
+}
+
+
+void terrain_draw(int *terrain) {
     /* how many points */
-    int count=*ptr++;
+    int count=*terrain++;
     /* go to x,y */
-    gxy(ptr[0],ptr[1]);
+    gxy(terrain[0],terrain[1]);
     /* and draw them all using delta */
     for (int i=2;i<count;i+=2) {
-        int dx=ptr[i]-ptr[i-2],
-            dy=ptr[i+1]-ptr[i-1];
+        int dx=terrain[i]-terrain[i-2],
+            dy=terrain[i+1]-terrain[i-1];
         /* and draw the delta! */
         gdrawdelta(dx,dy);
     }
-}
-
-extern void levelA, levelB, levelC;
-void* terra_pick(int level) {
-    int p=rand()%3;
-    if (p==0) return &levelA;
-    else if (p==1) return &levelB;
-    else return &levelC;
 }
