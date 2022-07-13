@@ -14,6 +14,8 @@
 
 #include <game/lander.h>
 #include <game/events.h>
+#include <game/score.h>
+#include <game/terrain.h>
 
 /* horizontal move cycle: move the lander */
 void ev_clk_hmove(game_t *g)  {
@@ -26,6 +28,11 @@ void ev_clk_hmove(game_t *g)  {
         g->lpos.x=LANDER_MAX_X - LANDER_INIT_X - LANDER_W;
     /* notify update */
     g->update_lander=true;
+    /* update height */
+    rect_t lander_rect={g->lpos.x,g->lpos.y,
+        g->lpos.x+LANDER_W, g->lpos.y+LANDER_H};
+    int h=terrain_height(g->terrain,&lander_rect);
+    score_set(SCORE_ALT,h);
 }
 
 /* vertical move cycle: move the lander */
@@ -38,15 +45,25 @@ void ev_clk_vmove(game_t *g) {
         g->lpos.y = LANDER_MIN_Y + LANDER_INIT_Y;
     /* notify update */
     g->update_lander=true;
-
+    /* update height */
+    rect_t lander_rect={g->lpos.x,g->lpos.y,
+        g->lpos.x+LANDER_W, g->lpos.y+LANDER_H};
+    int h=terrain_height(g->terrain,&lander_rect);
+    score_set(SCORE_ALT,h);
 }
 
 /* gravity cycle: simply increase vertical speed */
 void ev_clk_gravity(game_t *g) {
     /* add vy */
-    if (g->vy<LANDER_MAX_VEL) g->vy++;
-    /* notify update */
-    g->update_lander=true;
+    if (g->vy<LANDER_MAX_VEL) {
+        g->vy++;
+        /* update clock */
+        clk_setticks(g->vyclk,LANDER_MAX_VEL - abs(g->vy));
+        /* notify update */
+        g->update_lander=true;
+        /* and update telemetry */
+        score_set(SCORE_VSPEED,10 * g->vy);
+    }
 }
 
 /* lander thrust clock */
@@ -88,10 +105,19 @@ void ev_kbd_space(game_t *g) {
     lander_calc_thrust(g->lpos.angle, &tx, &ty);
     
     /* apply it amd reset timers */
-    g->vy += ty; g->vx += tx;
+    g->vy -= ty; g->vx -= tx;
+    /* check bounds */
+    if (g->vy<-LANDER_MAX_VEL) g->vy=-LANDER_MAX_VEL;
+    if (g->vy>LANDER_MAX_VEL) g->vy=LANDER_MAX_VEL;
+    if (g->vx<-LANDER_MAX_VEL) g->vx=-LANDER_MAX_VEL;
+    if (g->vx>LANDER_MAX_VEL) g->vx=LANDER_MAX_VEL;
+    /* update clock */
     clk_setticks(g->vxclk,LANDER_MAX_VEL - abs(g->vx));
     clk_setticks(g->vyclk,LANDER_MAX_VEL - abs(g->vy));
-    
+    /* and score */
+    score_set(SCORE_VSPEED,10 * g->vy);
+    score_set(SCORE_HSPEED,10 * g->vx);
+
     /* and notify drawing logic */
     g->thrust=THRUST_AVG;
     g->update_lander=true;

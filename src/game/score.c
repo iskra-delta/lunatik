@@ -14,12 +14,12 @@
 #include <game/score.h>
 
 static score_t scoreboard[SCORES] = {
-    { 0x01, "GORIVO",   SCORE_FUEL_X,   SCORE_FUEL_Y,   0, true },
-    { 0x02, "DO TAL",   SCORE_ALT_X,    SCORE_ALT_Y,    0, true },
-    { 0x04, "HOR.HITR.",SCORE_HSPEED_X, SCORE_HSPEED_Y, 0, true },
-    { 0x08, "VER.HITR.",SCORE_VSPEED_X, SCORE_VSPEED_Y, 0, true },
-    { 0x10, "POSKUSI",  SCORE_LIVES_X,  SCORE_LIVES_Y,  0, true },
-    { 0x20, "REZULTAT", SCORE_RESULT_X, SCORE_RESULT_Y, 0, true }
+    { 0x01, "GORIVO",   SCORE_FUEL_X,   SCORE_FUEL_Y,   0, 80,  true },
+    { 0x02, "DO TAL",   SCORE_ALT_X,    SCORE_ALT_Y,    0, 80,  true },
+    { 0x04, "HOR.HITR.",SCORE_HSPEED_X, SCORE_HSPEED_Y, 0, 100, true },
+    { 0x08, "VER.HITR.",SCORE_VSPEED_X, SCORE_VSPEED_Y, 0, 100, true },
+    { 0x10, "POSKUSI",  SCORE_LIVES_X,  SCORE_LIVES_Y,  0, 100, true },
+    { 0x20, "REZULTAT", SCORE_RESULT_X, SCORE_RESULT_Y, 0, 100, true }
 };
 
 void score_draw_label(uint8_t id) {
@@ -31,20 +31,21 @@ void score_draw_label(uint8_t id) {
         scoreboard[id].y);
 }
 
-void score_draw_board() {
+void score_draw_board(bool clear) {
     char ss[10];
     for(int id=SCORE_FUEL; id<=SCORE_RESULT;id++)
         if (scoreboard[id].updated) {
             rect_t r={
-                scoreboard[id].x + SCORE_NUM_OFF, 
+                scoreboard[id].x + scoreboard[id].offsx, 
                 scoreboard[id].y,
-                scoreboard[id].x + SCORE_NUM_OFF + SCORE_NUM_W, 
+                scoreboard[id].x + scoreboard[id].offsx + SCORE_NUM_W, 
                 scoreboard[id].y + SCORE_NUM_H};
             gsetcolor(CO_BACK);
             gfillrect(&r);
             gsetcolor(CO_FORE);
             gputtext(&astro_font,scorez(scoreboard[id].num, ss),r.x0,r.y0);
-            scoreboard[id].updated=false;
+            if (clear)
+                scoreboard[id].updated=false;
         }
 }
 

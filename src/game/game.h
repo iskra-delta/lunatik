@@ -36,7 +36,7 @@
 
 /* game velocity */
 #define LANDER_MAX_VEL  10
-#define LANDER_INIT_VX  4
+#define LANDER_INIT_VX  10
 #define LANDER_INIT_VY  0
 #define LANDER_MOVE_LEN 1
 
@@ -46,8 +46,8 @@
 #define THRUST_FULL     2
 
 /* clock handlers */
-#define CLK_GRAVITY     70
-#define CLK_THRUST      30
+#define CLK_GRAVITY     25
+#define CLK_THRUST      20
 
 /* lander position */
 typedef struct lpos_s {
@@ -59,7 +59,7 @@ typedef struct lpos_s {
 /* screen pages! */
 #define SCREEN_PAGES    2
 /* how many levels the game has */
-#define GAME_LEVELS     10
+#define GAME_LEVELS     5
 /* what is 1 fuel unit (each game level has less)
    fuel, this number is the multiplier! */
 #define FUEL_UNIT       100
@@ -90,6 +90,8 @@ typedef struct game_s {
     bool update_lander;                 /* redraw? */
     /* current display page */
     uint8_t page;
+    /* terrain */
+    int *terrain;
 } game_t;
 
 

@@ -24,7 +24,6 @@
 #define SCORE_RESULT    5
 
 /* score number offset */
-#define SCORE_NUM_OFF   100
 #define SCORE_NUM_W     50
 #define SCORE_NUM_H     16
 
@@ -50,6 +49,7 @@ typedef struct score_s {
     int x;
     int y;
     int num;
+    int offsx;
     bool updated;
 } score_t;
 
@@ -63,7 +63,7 @@ extern char *scorez(int i, char *a);
 extern void score_draw_label(uint8_t id);
 
 /* update all scores that need update... */
-extern void score_draw_board();
+extern void score_draw_board(bool clear);
 
 /* set the score */
 extern void score_set(uint8_t id, int num);

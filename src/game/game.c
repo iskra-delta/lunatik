@@ -22,6 +22,7 @@
 #include <game/lander.h>
 #include <game/score.h>
 #include <game/intro.h>
+#include <game/terrain.h>
 
 static game_t _game;
 game_t *game_init() {
@@ -64,24 +65,25 @@ game_t *game_init() {
 
 
 uint8_t game_draw_background(game_t *g) {
-    g;
     /* set write page to 1
        assumption: current page is 0 */
     gsetpage(PG_WRITE,1);
     /* draw scoreboard... */
-    score_draw_board();
+    score_invalidate_board();
+    score_draw_board(false);
     for (int id=SCORE_FUEL; id<=SCORE_RESULT; id++)
         score_draw_label(id);
+    terrain_draw(g->terrain);
     /* now clear screen 0 and switch display to page 1 */
     gcls();
     gsetpage(PG_DISPLAY,1);
     /* finally, draw background for screen 0 */
     gsetpage(PG_WRITE,0);
     /* draw scoreboard (on both pages)... */
-    score_invalidate_board();
-    score_draw_board();
+    score_draw_board(true);
     for (int id=SCORE_FUEL; id<=SCORE_RESULT; id++)
         score_draw_label(id);
+    terrain_draw(g->terrain);
     /* and return current page! */
     return 0;
 }
@@ -95,6 +97,9 @@ void game_run() {
     /* initialize game! */
     game_t *g=game_init();
 
+    /* generate the terrain */
+    g->terrain=terrain_generate(g->level);
+
     /* draw background, it returns current
        display page and we want to start on next page... */
     g->page = game_next_page(game_draw_background(g));
@@ -102,6 +107,7 @@ void game_run() {
 
     /* main game loop! */
     bool exit=false;
+    bool page_switch=false;
     while(!exit) {
 
         /* handle drawing to display page */
@@ -114,6 +120,9 @@ void game_run() {
 
                 /* remember current position as prev. position*/
                 memcpy(&(g->lprevpos), &(g->lpos), sizeof(lpos_t));
+
+                /* update the scoreboard too */
+                score_draw_board(!page_switch);
 
                 /* signal end of paing cycle */
                 g->update_lander=false;
@@ -135,10 +144,13 @@ void game_run() {
 
         /* switch pages? */
         if (g->update_lander) {
+            /* and switch page */
             gsetpage(PG_DISPLAY, g->page);
             g->page=game_next_page(g->page);
             gsetpage(PG_WRITE, g->page);
-        }
+            page_switch=true;
+        } else
+            page_switch=false;
     }
     /* clear page 1 before leaving */
     gsetpage(PG_DISPLAY|PG_WRITE,1);
