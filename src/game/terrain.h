@@ -21,6 +21,9 @@
 #define TERRAIN_MAX_Y       500
 #define TERRAIN_MAX_X       1023
 
+/* terrain dx */
+#define TERRAIN_DX          ((TERRAIN_MAX_X+1)/TERRAIN_LINES)
+
 /* terrain var. level multiplier */
 #define TERRAIN_LEVEL_MUL   20
 #define TERRAIN_VAR         200
@@ -36,9 +39,15 @@
 extern int* terrain_generate(uint8_t level);
 
 /* draw the terrain! */
-extern void terrain_draw(int *terrain);
+extern void terrain_draw(int *terrain, int i0, int i1, bool bold);
 
 /* distance from lander to terrain */
 extern int terrain_height(int *terrain, rect_t *rect);
+
+/* get affected lines */
+extern void terrain_affected_lines(rect_t *rect, int *i0, int *i1);
+
+/* detect collision */
+extern bool terrain_collision(int *terrain, int i0, int i1, rect_t *rect, int *miny, int *maxy);
 
 #endif /* __TERRAIN_H__ */

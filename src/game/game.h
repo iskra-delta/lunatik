@@ -46,14 +46,21 @@
 #define THRUST_FULL     2
 
 /* clock handlers */
-#define CLK_GRAVITY     25
-#define CLK_THRUST      20
+#define CLK_GRAVITY     20
+#define CLK_THRUST      8
+
+/* game result flags */
+#define R_BAD_ANGLE     0x01
+#define R_BAD_VSPEED    0x02
+#define R_BAD_HSPEED    0x04
+#define R_BAD_TERRAIN   0x08
 
 /* lander position */
 typedef struct lpos_s {
-    coord x;
-    coord y;
+    rect_t lr;
     uint8_t angle;
+    int tx0;    /* affected terrain x0 */
+    int tx1;    /* affected terrain x1 */
 } lpos_t;
 
 /* screen pages! */
@@ -80,7 +87,7 @@ typedef struct game_s {
     uint8_t thrust;
     /* lander position and prev. position on both pages! */
     lpos_t lpos;
-    lpos_t lprevpos;
+    lpos_t lprevpos[SCREEN_PAGES];
     /* game clocks! */
     clk_t *vxclk;
     clk_t *vyclk;
@@ -94,6 +101,8 @@ typedef struct game_s {
     int *terrain;
 } game_t;
 
+/* astro font */
+extern void astro_font;
 
 /* run game! */
 extern void game_run();
