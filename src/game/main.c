@@ -29,8 +29,15 @@ int main() {
     gcls();
 
     /* show intial page... */
-    while (intro_run())
-        game_run();
+    uint8_t level, lives, game_score;
+    while (intro_run()) {
+        /* init variables */
+        level=1; lives=3; game_score=0; 
+        while (
+            game_run( &level, &lives, &game_score)
+            && level<=5
+            && lives>0) {}
+    }
 
     /* clear screen */
     gcls();

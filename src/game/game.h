@@ -50,10 +50,12 @@
 #define CLK_THRUST      8
 
 /* game result flags */
+#define R_SUCCESS       0x00
 #define R_BAD_ANGLE     0x01
 #define R_BAD_VSPEED    0x02
 #define R_BAD_HSPEED    0x04
 #define R_BAD_TERRAIN   0x08
+#define R_NO_COLLISION  0xff
 
 /* lander position */
 typedef struct lpos_s {
@@ -105,6 +107,6 @@ typedef struct game_s {
 extern void astro_font;
 
 /* run game! */
-extern void game_run();
+extern bool game_run(uint8_t *level, uint8_t *lives, uint8_t *game_score);
 
 #endif /* __GAME_H__ */

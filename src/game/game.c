@@ -26,13 +26,13 @@
 
 
 static game_t _game;
-game_t *game_init() {
+static game_t *game_init(uint8_t level, uint8_t lives, uint8_t game_score) {
     /* start the game at level 1 */
-    _game.level=1;
+    _game.level=level;
     /* calcuate remaining fuel based on level and
        set initial score to 0 */
     score_set(SCORE_FUEL,(GAME_LEVELS - _game.level + 1) * FUEL_UNIT);
-    score_set(SCORE_RESULT,0);
+    score_set(SCORE_RESULT,game_score);
     /* set initial velocity and thrust */
     _game.vx = LANDER_INIT_VX;
     _game.vy = LANDER_INIT_VY;
@@ -41,7 +41,7 @@ game_t *game_init() {
     score_set(SCORE_HSPEED,10 * _game.vx);
     score_set(SCORE_VSPEED,10 * _game.vy);
     /* lives */
-    _game.lives=3;
+    _game.lives=lives;
     score_set(SCORE_LIVES,_game.lives);
     /* create game clocks */
     clk_clr();
@@ -66,7 +66,6 @@ game_t *game_init() {
     /* return pointer to initialized game! */
     return &_game;
 }
-
 
 
 uint8_t game_draw_background(game_t *g) {
@@ -98,10 +97,40 @@ static uint8_t game_next_page(uint8_t page) {
 }
 
 
-void game_run() {
+static uint8_t game_collision(game_t *g) {
+    uint8_t result=R_NO_COLLISION;
+    /* collision detect with real sprite rect*/
+    rect_t real_lander_rect={
+        g->lpos.lr.x0+LANDER_H_MARG,
+        g->lpos.lr.y0+LANDER_V_MARG,
+        g->lpos.lr.x1-LANDER_H_MARG,
+        g->lpos.lr.y1-LANDER_V_MARG};
+    int miny, maxy;
+    if (terrain_collision(
+        g->terrain,
+        g->lpos.tx0,
+        g->lpos.tx1,
+        &real_lander_rect,
+        &miny,&maxy)
+    ) {
+        result=R_SUCCESS;
+        if (g->lpos.angle!=0)
+            result|=R_BAD_ANGLE;
+        if (g->vx>3)
+            result|=R_BAD_HSPEED;
+        if (g->vy>4)
+            result|=R_BAD_VSPEED;
+        if (abs(maxy-miny)>2)
+            result|=R_BAD_TERRAIN;
+    }
+    return result;
+}
+
+
+bool game_run(uint8_t *level, uint8_t *lives, uint8_t *game_score) {
 
     /* initialize game! */
-    game_t *g=game_init();
+    game_t *g=game_init(*level, *lives, *game_score);
 
     /* generate the terrain */
     g->terrain=terrain_generate(g->level);
@@ -115,9 +144,12 @@ void game_run() {
     score_set(SCORE_ALT,terrain_height(g->terrain,&(g->lpos.lr)));
 
     /* main game loop! */
-    bool exit=false;
-    uint8_t result=0;
+    bool exit=false, page_switch=true;
+    uint8_t collision_result=false;
     while(!exit) {
+
+        if (page_switch) 
+            score_draw_board();
 
         /* handle drawing to display page */
         if (g->page!=INVALID_PAGE
@@ -126,9 +158,6 @@ void game_run() {
                 /* erase on previous and draw on current position! */
                 lander_erase(&(g->lprevpos[g->page].lr));
                 lander_draw(&(g->lpos.lr), g->lpos.angle,g->thrust);
-                
-                /* update the scoreboard too */
-                score_draw_board();
 
                 /* update previous terrin!  */
                 terrain_draw(
@@ -169,42 +198,33 @@ void game_run() {
             gsetpage(PG_DISPLAY, g->page);
             g->page=game_next_page(g->page);
             gsetpage(PG_WRITE, g->page);
-        } 
+            page_switch=true;
+        } else
+            page_switch=false;
 
-        /* collision detect with real sprite rect*/
-        rect_t real_lander_rect={
-            g->lpos.lr.x0+LANDER_H_MARG,
-            g->lpos.lr.y0+LANDER_V_MARG,
-            g->lpos.lr.x1-LANDER_H_MARG,
-            g->lpos.lr.y1-LANDER_V_MARG};
-        int miny, maxy;
-        if (terrain_collision(
-            g->terrain,
-            g->lpos.tx0,
-            g->lpos.tx1,
-            &real_lander_rect,
-            &miny,&maxy)
-        ) {
-            result=0;
-            if (g->lpos.angle!=0)
-                result|=R_BAD_ANGLE;
-            if (g->vx>3)
-                result|=R_BAD_HSPEED;
-            if (g->vy>4)
-                result|=R_BAD_VSPEED;
-            if (abs(maxy-miny)>2)
-                result|=R_BAD_TERRAIN;
-            printf("\n\nres=%02x\n",result);
-            if (result) break;
-        }
+        /* test for collision */
+        collision_result=game_collision(g);
+        if (collision_result!=R_NO_COLLISION) 
+            break;
     }
-    /* display result */
-    gsetpage(PG_WRITE,game_next_page(g->page));
-    if (!result) 
-        gputtext(&astro_font, "TELEMARK LUNATIK!", 50, 100);
-    else
-        gputtext(&astro_font, "NA LUNI NIHCE NE SLISI VASIH KRIKOV!", 300, 210);
-    while (!kbhit());
+    
+    /* if we have a collision we have a result,
+       otherwise it is Ctrl+C */
+    if (collision_result!=R_NO_COLLISION) {
+        /* display result */
+        gsetpage(PG_WRITE,game_next_page(g->page));
+        if (collision_result==R_SUCCESS) {
+            gputtext(&astro_font, "TELEMARK, LUNATIK. TELEMARK!", 300, 210);      
+            /* next level, add score! */
+            *game_score = *game_score + 10 * (*level);
+            *level = *level + 1;
+        }
+        else {
+            gputtext(&astro_font, "NA LUNI NIHCE NE SLISI VASIH KRIKOV!", 300, 210);
+            *lives = *lives - 1;
+        }
+        while (!kbhit());
+    }
 
     /* clear page 1 before leaving */
     gsetpage(PG_DISPLAY|PG_WRITE,1);
@@ -212,4 +232,6 @@ void game_run() {
     /* leave the game! prepare for intro page... */
     gsetpage(PG_DISPLAY|PG_WRITE,0);
 
+    /* and return exit status (Ctrl+C=true) */
+    return !exit;
 }
