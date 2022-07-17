@@ -16,6 +16,7 @@
 
 #include <ugpx.h>
 
+#include <game/msgs.h>
 #include <game/clk.h>
 
 
@@ -49,13 +50,9 @@
 #define CLK_GRAVITY     20
 #define CLK_THRUST      8
 
-/* game result flags */
-#define R_SUCCESS       0x00
-#define R_BAD_ANGLE     0x01
-#define R_BAD_VSPEED    0x02
-#define R_BAD_HSPEED    0x04
-#define R_BAD_TERRAIN   0x08
-#define R_NO_COLLISION  0xff
+/* messages */
+#define MESSAGE_X       200
+#define MESSAGE_Y       100
 
 /* lander position */
 typedef struct lpos_s {

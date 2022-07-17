@@ -20,6 +20,7 @@
 
 
 /* ----- main loop --------------------------------------------------------- */
+extern void idp8x16_font;
 int main() {
 
     /* enter graphics mode */
@@ -29,14 +30,16 @@ int main() {
     gcls();
 
     /* show intial page... */
-    uint8_t level, lives, game_score;
+    uint8_t level=1, lives=3, game_score=0;
     while (intro_run()) {
-        /* init variables */
-        level=1; lives=3; game_score=0; 
         while (
             game_run( &level, &lives, &game_score)
             && level<=5
-            && lives>0) {}
+            && lives>0) {
+                level;lives;game_score;
+            }
+        /* reset variables */
+        level=1; lives=3; game_score=0; 
     }
 
     /* clear screen */
@@ -48,6 +51,3 @@ int main() {
     /* all well.. */
     return 0;
 }
-
-
-

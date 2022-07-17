@@ -23,6 +23,7 @@
 #include <game/score.h>
 #include <game/intro.h>
 #include <game/terrain.h>
+#include <game/msgs.h>
 
 
 static game_t _game;
@@ -212,17 +213,22 @@ bool game_run(uint8_t *level, uint8_t *lives, uint8_t *game_score) {
        otherwise it is Ctrl+C */
     if (collision_result!=R_NO_COLLISION) {
         /* display result */
+        int ymsg=MESSAGE_Y;
         gsetpage(PG_WRITE,game_next_page(g->page));
         if (collision_result==R_SUCCESS) {
-            gputtext(&astro_font, "TELEMARK, LUNATIK. TELEMARK!", 300, 210);      
+            ymsg=msg_success(MESSAGE_X,ymsg);
             /* next level, add score! */
             *game_score = *game_score + 10 * (*level);
             *level = *level + 1;
+            if (*level>5)
+                ymsg=msg_the_end(MESSAGE_X,ymsg+16);
         }
         else {
-            gputtext(&astro_font, "NA LUNI NIHCE NE SLISI VASIH KRIKOV!", 300, 210);
+            ymsg=msg_failure(MESSAGE_X,ymsg);
+            ymsg=msg_explain(MESSAGE_X,ymsg,collision_result);
             *lives = *lives - 1;
         }
+        msg_press_any_key(MESSAGE_X, ymsg);
         while (!kbhit());
     }
 

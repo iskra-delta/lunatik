@@ -11,16 +11,16 @@
  */
 #include <game/intro.h>
 
-
 static void *letters[]={&title_L,&title_U, &title_N, &title_A, &title_T, &title_I, &title_K};
 void intro_title(coord x, coord y, uint8_t spacing) {
     int n=sizeof (letters)/sizeof(void *);
-    uint8_t width, height;
+    uint8_t *p, w;
     for (int i=0;i<n;i++) {
         gputglyph(letters[i],x,y);
-        gmeasureglyph(letters[i],&width,&height);
-        if (i==3) width-=32; /* hardcoded kerning */
-        x=x+width+spacing;
+        p=letters[i];
+        w=*(p+1);
+        if (i==3) w-=32; /* hardcoded kerning */
+        x=x+w+spacing;
     }
 }
 
