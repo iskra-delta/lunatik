@@ -22,7 +22,7 @@
 #define R_BAD_TERRAIN   0x08
 #define R_NO_COLLISION  0xff
 
-/* row spacing */
+/* row height */
 #define MSG_ROW_H       20
 
 /* explain result */

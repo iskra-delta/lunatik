@@ -68,8 +68,17 @@ static game_t *game_init(uint8_t level, uint8_t lives, uint8_t game_score) {
     return &_game;
 }
 
+static void game_force_clear() {
+    gsetpage(PG_WRITE|PG_DISPLAY,0);
+    gcls();
+    gsetpage(PG_WRITE|PG_DISPLAY,1);
+    gcls();
+    gsetpage(PG_WRITE|PG_DISPLAY,0);
+}
 
 uint8_t game_draw_background(game_t *g) {
+    /* fore clean */
+    game_force_clear();
     /* set write page to 1
        assumption: current page is 0 */
     gsetpage(PG_WRITE,1);
@@ -79,7 +88,6 @@ uint8_t game_draw_background(game_t *g) {
         score_draw_label(id);
     terrain_draw(g->terrain, 0, TERRAIN_LINES, false);
     /* now clear screen 0 and switch display to page 1 */
-    gcls();
     gsetpage(PG_DISPLAY,1);
     /* finally, draw background for screen 0 */
     gsetpage(PG_WRITE,0);
