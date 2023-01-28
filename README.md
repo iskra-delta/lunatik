@@ -31,4 +31,4 @@ Afterwards, you can find the disk image in the `bin/` directory and the `lunatik
 [license.url]:    https://github.com/tstih/libcpm3-z80/blob/main/LICENSE
 [license.badge]:  https://img.shields.io/badge/license-MIT-blue.svg
 
-[status.badge]:  https://img.shields.io/badge/status-stable-green.svg
+[status.badge]:  https://img.shields.io/badge/status-stable-dkgreen.svg
